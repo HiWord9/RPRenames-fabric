@@ -77,8 +77,10 @@ public abstract class AnvilScreenMixin extends Screen {
 	TexturedButtonWidget button5;
 	TexturedButtonWidget searchTab;
 	TexturedButtonWidget favoriteTab;
+	TexturedButtonWidget inventoryTab;
 	TexturedButtonWidget searchTab2;
 	TexturedButtonWidget favoriteTab2;
+	TexturedButtonWidget inventoryTab2;
 	int tabNum = 1;
 	TexturedButtonWidget addToFavorite;
 	TexturedButtonWidget removeFromFavorite;
@@ -235,6 +237,7 @@ public abstract class AnvilScreenMixin extends Screen {
 				tabNum = 1;
 				remove(searchTab2);
 				remove(favoriteTab2);
+				remove(inventoryTab2);
 				addDrawableChild(searchTab2);
 				screenUpdate();
 			});
@@ -242,13 +245,24 @@ public abstract class AnvilScreenMixin extends Screen {
 				tabNum = 2;
 				remove(searchTab2);
 				remove(favoriteTab2);
+				remove(inventoryTab2);
 				addDrawableChild(favoriteTab2);
+				screenUpdate();
+			});
+			inventoryTab = new TexturedButtonWidget(this.width / 2 - 200 - 28 - 30, this.height / 2 - 83 + 3 + 31 + 31, 33, 26, 48 + 4, 88 + 26, 0, RENAMES_MENU, menuWidth, menuHeight, button -> {
+				tabNum = 3;
+				remove(searchTab2);
+				remove(favoriteTab2);
+				remove(inventoryTab2);
+				addDrawableChild(inventoryTab2);
 				screenUpdate();
 			});
 			searchTab2 = new TexturedButtonWidget(this.width / 2 - 200 - 28 - 30, this.height / 2 - 83 + 3, 33, 26, 48 + 35 + 2, 88, 0, RENAMES_MENU, menuWidth, menuHeight, null);
 			favoriteTab2 = new TexturedButtonWidget(this.width / 2 - 200 - 28 - 30, this.height / 2 - 83 + 3 + 31, 33, 26, 48 + 35 + 2, 88 + 26, 0, RENAMES_MENU, menuWidth, menuHeight, null);
+			inventoryTab2 = new TexturedButtonWidget(this.width / 2 - 200 - 28 - 30, this.height / 2 - 83 + 3 + 31 + 31, 33, 26, 48 + 35 + 2, 88 + 26, 0, RENAMES_MENU, menuWidth, menuHeight, null);
 			searchTab2.active = false;
 			favoriteTab2.active = false;
+			inventoryTab2.active = false;
 
 			addToFavorite = new TexturedButtonWidget(this.width / 2 + config.favoritePosX, this.height / 2 + config.favoritePosY, 9, 9, 43, 88 + 9, 0, RENAMES_MENU, menuWidth, menuHeight, button -> {
 				String favoriteName = nameField.getText();
@@ -420,6 +434,8 @@ public abstract class AnvilScreenMixin extends Screen {
 					} else {
 						currentRenameList = new Rename(new String[0]);
 					}
+				} else if (tabNum == 3) {
+					currentRenameList = new Rename(new String[0]);
 				}
 				if (tabNum == 1 && currentItem.equals("name_tag")) {
 					ArrayList<String> modelsArray = new ArrayList<>();
@@ -511,82 +527,93 @@ public abstract class AnvilScreenMixin extends Screen {
 				clearAll();
 
 			} else if ((!clientConfigReadable && !serverConfigReadable) && (clientConfigCEMReadable || serverConfigCEMReadable) && currentItem.equals("name_tag")) {
-				ArrayList<String> modelsArray = new ArrayList<>();
-				if (clientConfigCEMReadable) {
-					try {
-						Files.walk(Path.of(RPRenames.configPathClient + RPRenames.configPathNameCEM), new FileVisitOption[0]).filter(path -> path.toString().endsWith(".json")).forEach(jsonFile -> {
-							File file = new File(String.valueOf(jsonFile));
-							for (String s : ConfigManager.configRead(file).getName()) {
-								if (Arrays.stream(search(ConfigManager.configRead(file).getName(), searchField.getText())).toList().contains(s)) {
-									if (!modelsArray.contains(s)) {
-										modelsArray.add(s);
-										ArrayList<String> nal = new ArrayList<>();
-										nal.add(file.getName().substring(0, file.getName().length() - 5));
-										mobName.add(nal);
-									} else {
-										int n = 0;
-										for (String s2 : modelsArray) {
-											if (s2.equals(s)) {
-												break;
+				if (tabNum == 1) {
+					ArrayList<String> modelsArray = new ArrayList<>();
+					if (clientConfigCEMReadable) {
+						try {
+							Files.walk(Path.of(RPRenames.configPathClient + RPRenames.configPathNameCEM), new FileVisitOption[0]).filter(path -> path.toString().endsWith(".json")).forEach(jsonFile -> {
+								File file = new File(String.valueOf(jsonFile));
+								for (String s : ConfigManager.configRead(file).getName()) {
+									if (Arrays.stream(search(ConfigManager.configRead(file).getName(), searchField.getText())).toList().contains(s)) {
+										if (!modelsArray.contains(s)) {
+											modelsArray.add(s);
+											ArrayList<String> nal = new ArrayList<>();
+											nal.add(file.getName().substring(0, file.getName().length() - 5));
+											mobName.add(nal);
+										} else {
+											int n = 0;
+											for (String s2 : modelsArray) {
+												if (s2.equals(s)) {
+													break;
+												}
+												n++;
 											}
-											n++;
+											ArrayList<String> nal = mobName.get(n);
+											nal.add(file.getName().substring(0, file.getName().length() - 5));
+											mobName.set(n, nal);
 										}
-										ArrayList<String> nal = mobName.get(n);
-										nal.add(file.getName().substring(0, file.getName().length() - 5));
-										mobName.set(n, nal);
 									}
 								}
-							}
-						});
-					} catch (IOException e) {
-						e.printStackTrace();
+							});
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
-				}
-				if (serverConfigCEMReadable) {
-					try {
-						Files.walk(Path.of(RPRenames.configPathServer + RPRenames.configPathNameCEM), new FileVisitOption[0]).filter(path -> path.toString().endsWith(".json")).forEach(jsonFile -> {
-							File file = new File(String.valueOf(jsonFile));
-							for (String s : ConfigManager.configRead(file).getName()) {
-								if (Arrays.stream(search(ConfigManager.configRead(file).getName(), searchField.getText())).toList().contains(s)) {
-									if (!modelsArray.contains(s)) {
-										modelsArray.add(s);
-										ArrayList<String> nal = new ArrayList<>();
-										nal.add(file.getName().substring(0, file.getName().length() - 5));
-										mobName.add(nal);
-									} else {
-										int n = 0;
-										for (String s2 : modelsArray) {
-											if (s2.equals(s)) {
-												break;
+					if (serverConfigCEMReadable) {
+						try {
+							Files.walk(Path.of(RPRenames.configPathServer + RPRenames.configPathNameCEM), new FileVisitOption[0]).filter(path -> path.toString().endsWith(".json")).forEach(jsonFile -> {
+								File file = new File(String.valueOf(jsonFile));
+								for (String s : ConfigManager.configRead(file).getName()) {
+									if (Arrays.stream(search(ConfigManager.configRead(file).getName(), searchField.getText())).toList().contains(s)) {
+										if (!modelsArray.contains(s)) {
+											modelsArray.add(s);
+											ArrayList<String> nal = new ArrayList<>();
+											nal.add(file.getName().substring(0, file.getName().length() - 5));
+											mobName.add(nal);
+										} else {
+											int n = 0;
+											for (String s2 : modelsArray) {
+												if (s2.equals(s)) {
+													break;
+												}
+												n++;
 											}
-											n++;
+											ArrayList<String> nal = mobName.get(n);
+											nal.add(file.getName().substring(0, file.getName().length() - 5));
+											mobName.set(n, nal);
 										}
-										ArrayList<String> nal = mobName.get(n);
-										nal.add(file.getName().substring(0, file.getName().length() - 5));
-										mobName.set(n, nal);
 									}
 								}
-							}
-						});
-					} catch (IOException e) {
-						e.printStackTrace();
+							});
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
+					String[] finalList = new String[modelsArray.size()];
+					int g = 0;
+					for (String s : modelsArray) {
+						finalList[g] = s;
+						g++;
+					}
+					currentRenameList = new Rename(finalList);
+
+				} else if (tabNum == 2) {
+					if (jsonRenamesFavorite.exists()) {
+						currentRenameList = new Rename(search(ConfigManager.configRead(jsonRenamesFavorite).getName(), searchField.getText()));
+					} else {
+						currentRenameList = new Rename(new String[0]);
+					}
+				} else if (tabNum == 3) {
+					currentRenameList = new Rename(new String[0]);
 				}
-				String[] finalList = new String[modelsArray.size()];
-				int g = 0;
-				for (String s : modelsArray) {
-					finalList[g] = s;
-					g++;
-				}
-				currentRenameList = new Rename(finalList);
 
 				currentRenameListSize = currentRenameList.getName().length;
 
 				buttonsDefine();
 				clearAll();
-
 			} else {
 				searchTab.active = false;
+				inventoryTab.active = false;
 				tabNum = 2;
 				if (jsonRenamesFavorite.exists()) {
 					currentRenameList = new Rename(search(ConfigManager.configRead(jsonRenamesFavorite).getName(), searchField.getText()));
@@ -814,8 +841,10 @@ public abstract class AnvilScreenMixin extends Screen {
 		button5textShadow.setText(Text.of(""));
 		remove(searchTab);
 		remove(favoriteTab);
+		remove(inventoryTab);
 		remove(searchTab2);
 		remove(favoriteTab2);
+		remove(inventoryTab2);
 		remove(openerFavoriteOnly);
 	}
 
@@ -841,7 +870,9 @@ public abstract class AnvilScreenMixin extends Screen {
 		int citSize = currentRenameList.getName().length - mobName.size();
 		ArrayList<Text> toolTip = new ArrayList<>();
 		toolTip.add(text);
+		boolean isCEM = false;
 		if (currentItem.equals("name_tag") && (page * 5) + order > citSize) {
+			isCEM = true;
 			for (String s : mobName.get((page * 5) + order - 1 - citSize)) {
 				toolTip.add(Text.of(s).copy().fillStyle(Style.EMPTY.withColor(Formatting.GRAY)));
 			}
@@ -857,7 +888,7 @@ public abstract class AnvilScreenMixin extends Screen {
 			}
 		}, text));
 
-		if (toolTip.size() > 1) {
+		if (isCEM) {
 			int n = 0;
 			for (String s : CEMList.mobsNames) {
 				if (s.equals(toolTip.get(1).getString())) {
@@ -980,18 +1011,28 @@ public abstract class AnvilScreenMixin extends Screen {
 	private void tabsUpdate() {
 		remove(searchTab);
 		remove(favoriteTab);
+		remove(inventoryTab);
 		addDrawableChild(searchTab);
 		addDrawableChild(favoriteTab);
+		addDrawableChild(inventoryTab);
 		remove(searchTab2);
 		remove(favoriteTab2);
+		remove(inventoryTab2);
 		if (tabNum == 1) {
 			addDrawableChild(searchTab2);
 			searchTab.active = false;
 			favoriteTab.active = true;
+			inventoryTab.active = true;
 		} else if (tabNum == 2) {
 			addDrawableChild(favoriteTab2);
 			searchTab.active = true;
 			favoriteTab.active = false;
+			inventoryTab.active = true;
+		} else if (tabNum == 3) {
+			addDrawableChild(inventoryTab2);
+			searchTab.active = true;
+			favoriteTab.active = true;
+			inventoryTab.active = false;
 		}
 	}
 
